@@ -1,3 +1,5 @@
-﻿namespace Application.DTO;
+﻿using Domain.Shared;
 
-public record AnswerDto(bool Success, IDto Value, string Message);
+namespace Application.DTO;
+
+public record AnswerDto(bool Success, IDto Value, Error error);
