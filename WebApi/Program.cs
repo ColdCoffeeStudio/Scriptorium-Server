@@ -1,4 +1,6 @@
 ﻿using Application;
+using Application.Services.ContentTable;
+using Application.Services.EncyclopediaSearch;
 using Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,8 +34,9 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IEncyclopediaSearchService, EncyclopediaSearchService>();
 
 builder.Services
     .AddApplication(builder.Configuration)
