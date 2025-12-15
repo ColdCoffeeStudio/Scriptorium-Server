@@ -5,8 +5,8 @@ namespace Domain.Entities;
 
 public class Scribe : IEntity<Scribe>
 {
-    private Guid Id { get; }
-    private string Name { get; }
+    public Guid Id { get; }
+    public string Name { get; }
     
     public static Result<Scribe> Create(string name)
     {

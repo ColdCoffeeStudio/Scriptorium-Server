@@ -4,6 +4,11 @@ namespace Domain.Errors;
 
 public class ThemeErrors
 {
+    public Error MissingId()
+    {
+        return new Error("Theme.MissingId", "Theme id must be greater than 0.");
+    }
+    
     public Error MissingName()
     {
         return new Error("Theme.MissingName", "Theme name is missing.");

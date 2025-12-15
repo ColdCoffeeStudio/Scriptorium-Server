@@ -5,16 +5,20 @@ namespace Domain.Entities;
 
 public class Encyclopedia : IEntity<Encyclopedia>
 {
-    private Guid Id { get; }
-    private string Title { get; }
-    private Scribe Scribe { get; }
+    public int Id { get; }
+    public string Title { get; }
+    public Scribe Scribe { get; }
 
-    public static Result<Encyclopedia> Create(string title, Scribe scribe)
+    public static Result<Encyclopedia> Create(int id, string title, Scribe scribe)
     {
         EncyclopediaErrors errors = new EncyclopediaErrors();
         Result<Encyclopedia> result;
-        
-        if (String.IsNullOrWhiteSpace(title))
+
+        if (id <= 0)
+        {
+            result = new Result<Encyclopedia>(Encyclopedia.Empty(), errors.MissingId(), false);
+        }
+        else if (String.IsNullOrWhiteSpace(title))
         {
             result = new Result<Encyclopedia>(Encyclopedia.Empty(), errors.MissingTitle(), false);
         }
@@ -22,7 +26,7 @@ public class Encyclopedia : IEntity<Encyclopedia>
         {
             result = scribe.Equals(Scribe.Empty()) 
                 ? new Result<Encyclopedia>(Encyclopedia.Empty(), errors.MissingScribe(), false) 
-                : new Result<Encyclopedia>(new Encyclopedia(Guid.NewGuid(), title, scribe), Error.Empty(), true);
+                : new Result<Encyclopedia>(new Encyclopedia(id, title, scribe), Error.Empty(), true);
         }
         
         return result;
@@ -30,10 +34,10 @@ public class Encyclopedia : IEntity<Encyclopedia>
 
     public static Encyclopedia Empty()
     {
-        return new Encyclopedia(Guid.Empty, "", Scribe.Empty());
+        return new Encyclopedia(-1, "", Scribe.Empty());
     }
 
-    private Encyclopedia(Guid id, string title, Scribe scribe)
+    private Encyclopedia(int id, string title, Scribe scribe)
     {
         Id = id;
         Title = title;
