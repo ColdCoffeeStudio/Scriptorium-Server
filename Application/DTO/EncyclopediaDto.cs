@@ -3,5 +3,6 @@
 public record EncyclopediaDto(
     int Id,
     string Title,
-    Guid ScribeId
+    Guid ScribeId,
+    string ScribeName
 ): IDto;

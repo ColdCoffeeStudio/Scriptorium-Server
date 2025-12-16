@@ -1,4 +1,7 @@
-﻿using Application.DTO;
+﻿using Application.Common.Mappers;
+using Application.DTO;
+using Application.EncyclopediaOperations.Queries.FetchEncyclopedia;
+using Domain.Entities;
 using Domain.Shared;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -7,10 +10,13 @@ namespace Application.Services.EncyclopediaSearch;
 
 public class EncyclopediaSearchService(ISender sender, ILogger<EncyclopediaSearchService> logger): IEncyclopediaSearchService
 {
-    public async Task<AnswerDto> HandleEncyclopediaSearchAsync(CancellationToken cancellationToken)
+    public async Task<AnswerListDto> HandleEncyclopediaSearchAsync(CancellationToken cancellationToken)
     {
-        EncyclopediaDto result = new EncyclopediaDto(1, "Volume 1", new Guid("6adf4413-ba64-49eb-9cfe-340005f19ca0"));
-
-        return new AnswerDto(true, result, Error.Empty());
+        EncyclopediaListAnswerListDtoMapper mapper = new EncyclopediaListAnswerListDtoMapper();
+        Result<EncyclopediaList> encyclopediaList = await sender.Send(new FetchEncyclopediaQuery(), cancellationToken);
+        
+        AnswerListDto result = mapper.Map(encyclopediaList.Value);
+        
+        return new AnswerListDto(encyclopediaList.Succeeded, result.Value, encyclopediaList.Error);
     }
 }

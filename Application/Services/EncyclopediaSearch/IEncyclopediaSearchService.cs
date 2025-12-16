@@ -5,5 +5,5 @@ namespace Application.Services.EncyclopediaSearch;
 
 public interface IEncyclopediaSearchService
 {
-    Task<AnswerDto> HandleEncyclopediaSearchAsync(CancellationToken cancellationToken);
+    Task<AnswerListDto> HandleEncyclopediaSearchAsync(CancellationToken cancellationToken);
 }

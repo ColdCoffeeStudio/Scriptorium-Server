@@ -28,6 +28,5 @@
       <Folder Include="Configurations\" />
       <Folder Include="Contexts\" />
       <Folder Include="Migrations\" />
-      <Folder Include="Repositories\" />
     </ItemGroup>
 </Project>

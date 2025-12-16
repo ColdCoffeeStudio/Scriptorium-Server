@@ -12,16 +12,16 @@ public class EncyclopediaController(ISender sender, IEncyclopediaSearchService s
     [HttpGet("filters")]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
-        return Ok();
+        AnswerListDto result = await service.HandleEncyclopediaSearchAsync(cancellationToken);
+        
+        return result.Success
+            ? Ok(result.Value)
+            : BadRequest(result.error);
     }
 
     [HttpGet("content-table/{encyclopediaId}")]
     public async Task<IActionResult> GetContentTable(int encyclopediaId, CancellationToken cancellationToken)
     {
-        AnswerDto result = await service.HandleEncyclopediaSearchAsync(cancellationToken);
-
-        return result.Success
-            ? Ok(result.Value)
-            : BadRequest(result.error);
+        return Ok();
     }
 }
