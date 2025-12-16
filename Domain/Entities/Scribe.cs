@@ -17,6 +17,17 @@ public class Scribe : IEntity<Scribe>
         
         return result;
     }
+    
+    public static Result<Scribe> Create(Guid id, string name)
+    {
+        ScribeErrors errors = new ScribeErrors();
+
+        Result<Scribe> result = String.IsNullOrEmpty(name) 
+            ? new Result<Scribe>(Scribe.Empty(), errors.MissingName(), false)
+            : new Result<Scribe>(new Scribe(id, name), Error.Empty(), true);
+        
+        return result;
+    }
 
     public static Scribe Empty()
     {
