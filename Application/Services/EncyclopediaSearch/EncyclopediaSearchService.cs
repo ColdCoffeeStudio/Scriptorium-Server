@@ -15,8 +15,6 @@ public class EncyclopediaSearchService(ISender sender, ILogger<EncyclopediaSearc
         EncyclopediaListAnswerListDtoMapper mapper = new EncyclopediaListAnswerListDtoMapper();
         Result<EncyclopediaList> encyclopediaList = await sender.Send(new FetchEncyclopediaQuery(), cancellationToken);
         
-        AnswerListDto result = mapper.Map(encyclopediaList.Value);
-        
-        return new AnswerListDto(encyclopediaList.Succeeded, result.Value, encyclopediaList.Error);
+        return mapper.Map(encyclopediaList.Value);
     }
 }
