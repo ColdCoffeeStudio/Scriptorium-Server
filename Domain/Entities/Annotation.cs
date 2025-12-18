@@ -10,11 +10,12 @@ public class Annotation: IEntity<Annotation>
     public int StartPage { get; }
     public int EndPage { get; }
     public string ContentUrl { get; }
+    public string Tags { get; }
     public DateOnly Date { get; }
     public Theme Theme { get; }
     public Encyclopedia Encyclopedia { get; }
 
-    public static Result<Annotation> Create(int id, string title, int startPage, int endPage, string contentUrl, DateOnly date, 
+    public static Result<Annotation> Create(int id, string title, int startPage, int endPage, string contentUrl, string tags, DateOnly date, 
         Theme theme, Encyclopedia encyclopedia)
     {
         AnnotationErrors errors = new AnnotationErrors();
@@ -59,7 +60,7 @@ public class Annotation: IEntity<Annotation>
                 : contentUrl;
             
             result = new Result<Annotation>(
-                new Annotation(id, title, startPage, endPage, contentUrl, date, theme, encyclopedia),
+                new Annotation(id, title, startPage, endPage, contentUrl, tags, date, theme, encyclopedia),
                 Error.Empty(), true);
         }
         
@@ -68,10 +69,10 @@ public class Annotation: IEntity<Annotation>
         
     public static Annotation Empty()
     {
-        return new Annotation(-1, "", -1,-1, "", DateOnly.MinValue, Theme.Empty(), Encyclopedia.Empty());
+        return new Annotation(-1, "", -1,-1, "", "", DateOnly.MinValue, Theme.Empty(), Encyclopedia.Empty());
     }
 
-    private Annotation(int id, string title, int startPage, int endPage, string contentUrl, DateOnly date, Theme theme,
+    private Annotation(int id, string title, int startPage, int endPage, string contentUrl, string tags, DateOnly date, Theme theme,
         Encyclopedia encyclopedia)
     {
         Id = id;
@@ -79,6 +80,7 @@ public class Annotation: IEntity<Annotation>
         StartPage = startPage;
         EndPage = endPage;
         ContentUrl = contentUrl;
+        Tags = tags;
         Date = date;
         Theme = theme;
         Encyclopedia = encyclopedia;
