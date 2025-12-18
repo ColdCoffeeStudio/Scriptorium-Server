@@ -38,13 +38,19 @@ internal sealed class EncyclopediaRepository(ScriptoriumDbContext context, ILogg
                 foreach (Encyclopedium encyclopedia in queryEncyclopedias)
                 {
 
-                    Domain.Entities.Scribe matchingScribe = MatchingScribe(queryScribes, new Guid(encyclopedia.scribeId));
-                    Result<Encyclopedia> tmpEncyclopedia = Encyclopedia.Create(encyclopedia.id, encyclopedia.title, matchingScribe);
+                    Result<Domain.Entities.Scribe> matchingScribe = MatchingScribe(queryScribes, new Guid(encyclopedia.scribeId));
+                    if (matchingScribe.Failed)
+                    {
+                        return new Result<EncyclopediaList>(EncyclopediaList.Empty(),
+                            matchingScribe.Error, false);
+                    }
+
+                    Result<Encyclopedia> tmpEncyclopedia = Encyclopedia.Create(encyclopedia.id, encyclopedia.title, matchingScribe.Value);
 
                     if (tmpEncyclopedia.Failed)
                     {
                         return new Result<EncyclopediaList>(EncyclopediaList.Empty(),
-                            errors.InvalidData(tmpEncyclopedia.Error), false);
+                            errors.InvalidData(encyclopedia.id, tmpEncyclopedia.Error), false);
                     }
                     
                     encyclopedias.Add(tmpEncyclopedia.Value);
@@ -61,9 +67,9 @@ internal sealed class EncyclopediaRepository(ScriptoriumDbContext context, ILogg
         }
     }
 
-    private Domain.Entities.Scribe MatchingScribe(List<Scribe> queryScribes, Guid scribeId)
+    private Result<Domain.Entities.Scribe> MatchingScribe(List<Scribe> queryScribes, Guid scribeId)
     {
-        Result<Domain.Entities.Scribe> result = new Result<Domain.Entities.Scribe>(Domain.Entities.Scribe.Empty(), Error.Empty(), false);
+        Result<Domain.Entities.Scribe> result = new Result<Domain.Entities.Scribe>(Domain.Entities.Scribe.Empty(), EncyclopediaRepositoryErrors.NoScribeFound(scribeId), false);
 
         foreach (Scribe scribe in queryScribes)
         {
@@ -74,6 +80,6 @@ internal sealed class EncyclopediaRepository(ScriptoriumDbContext context, ILogg
             }
         }
         
-        return result.Value;
+        return result;
     }
 }
