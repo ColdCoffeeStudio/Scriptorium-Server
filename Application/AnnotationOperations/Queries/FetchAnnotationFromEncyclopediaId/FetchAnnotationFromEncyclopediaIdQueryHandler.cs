@@ -1,6 +1,5 @@
 using Application.Common.Abstractions.Messaging;
 using Application.Common.Databases;
-using Application.ContentTableOperations.Queries.FetchContentTable;
 using Domain.Entities;
 using Domain.Shared;
 using Microsoft.Extensions.Logging;
