@@ -57,26 +57,6 @@ internal sealed class EncyclopediaRepository(ScriptoriumDbContext context, ILogg
         return result;
     }
 
-    public async Task<Result<Encyclopedia>> FetchEncyclopediaFromId(int encyclopediaId,
-        CancellationToken cancellationToken)
-    {
-        Encyclopedium? encyclopedium = await (
-            from e in context.Encyclopedia
-            where e.id == encyclopediaId
-            orderby e.id
-            select e
-        ).FirstOrDefaultAsync(cancellationToken: cancellationToken)!;
-
-        Scribe scribe = await (
-            from s in context.Scribes
-            where s.id == encyclopedium.scribeId
-            orderby s.id
-            select s
-        ).FirstOrDefaultAsync(cancellationToken: cancellationToken)!;
-        
-        return Map(encyclopedium, [(scribe)]);
-    }
-
     private Result<Encyclopedia> Map(Encyclopedium encyclopedia, List<Scribe> queryScribes)
     {
         Result<Domain.Entities.Scribe> matchingScribe = MatchingScribe(queryScribes, new Guid(encyclopedia.scribeId));

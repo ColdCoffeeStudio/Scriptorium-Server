@@ -13,10 +13,6 @@ public sealed class FetchAnnotationFromEncyclopediaIdQueryHandler(
 {
     public async Task<Result<AnnotationList>> Handle(FetchAnnotationFromEncyclopediaIdQuery request, CancellationToken cancellationToken)
     {
-        Result<Encyclopedia> encyclopedia = await encyclopediaRepository.FetchEncyclopediaFromId(request.EncyclopediaId, cancellationToken);
-
-        return encyclopedia.Succeeded
-            ? await annotationRepository.FetchAnnotationFromEncyclopedia(encyclopedia.Value, cancellationToken)
-            : new Result<AnnotationList>(AnnotationList.Empty(), encyclopedia.Error, false);
+        return await annotationRepository.FetchAnnotationFromEncyclopedia(request.EncyclopediaId, cancellationToken);
     }
 }
