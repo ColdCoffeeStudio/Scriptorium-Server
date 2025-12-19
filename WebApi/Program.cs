@@ -12,7 +12,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
 {
     configuration
-        .Enrich.WithProperty("ApplicationName", "Exemple")
+        .Enrich.WithProperty("ApplicationName", "Scriptorium")
         .WriteTo.Console()
         .WriteTo.DurableHttpUsingFileSizeRolledBuffers(
             requestUri: "http://localhost://",
