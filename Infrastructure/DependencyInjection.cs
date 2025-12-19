@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddDbContext<ScriptoriumDbContext>(options => 
             options.UseMySql(serverConnectionString, ServerVersion.AutoDetect(serverConnectionString)));
         services.AddScoped<IEncyclopediaRepository, EncyclopediaRepository>();
+        services.AddScoped<IAnnotationRepository, AnnotationRepository>();
         return services;
     }
 }
