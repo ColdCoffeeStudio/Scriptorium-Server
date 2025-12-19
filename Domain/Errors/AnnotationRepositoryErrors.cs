@@ -28,4 +28,9 @@ public class AnnotationRepositoryErrors
     {
         return new Error("AnnotationRepositoryErrors.ThemeCreationError", $"Something went wrong while initiating the theme '{themeId}' for the annotation '{annotationId}': {error.Message}");
     }
+
+    public Error ScribeCreationError(string scribeId, Error error)
+    {
+        return new Error("AnnotationRepositoryErrors.ScribeCreationError", $"Something went wrong while initiating the scribe '{scribeId}': {error.Message}");
+    }
 }

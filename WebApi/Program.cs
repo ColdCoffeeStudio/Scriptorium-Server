@@ -1,4 +1,5 @@
 ﻿using Application;
+using Application.Services.AnnotationInformation;
 using Application.Services.ContentTableSearch;
 using Application.Services.EncyclopediaSearch;
 using Infrastructure;
@@ -38,6 +39,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IEncyclopediaSearchService, EncyclopediaSearchService>();
 builder.Services.AddScoped<IContentTableService, ContentTableService>();
+builder.Services.AddScoped<IAnnotationInformationService, AnnotationInformationService>();
 
 builder.Services
     .AddApplication(builder.Configuration)
