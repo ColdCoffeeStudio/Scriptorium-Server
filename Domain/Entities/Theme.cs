@@ -38,7 +38,7 @@ public class Theme : IEntity<Theme>
 
     private static bool IncorrectFolder(string folder)
     {
-        return !folder.Any(Char.IsWhiteSpace);
+        return folder.Any(Char.IsWhiteSpace);
     }
 
     private Theme(int id, string name, string folder)
