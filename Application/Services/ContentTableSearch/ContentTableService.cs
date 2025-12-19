@@ -1,7 +1,6 @@
 ﻿using Application.Common.Mappers;
 using Application.DTO;
 using Domain.Entities;
-using Application.ContentTableOperations.Queries.FetchContentTable;
 using Domain.Errors;
 using Domain.Shared;
 using MediatR;
