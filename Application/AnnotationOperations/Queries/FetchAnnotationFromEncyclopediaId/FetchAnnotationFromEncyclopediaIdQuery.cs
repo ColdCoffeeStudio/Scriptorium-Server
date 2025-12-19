@@ -1,6 +1,6 @@
 using Application.Common.Abstractions.Messaging;
 using Domain.Entities;
 
-namespace Application.ContentTableOperations.Queries.FetchContentTable;
+namespace Application.AnnotationOperations.Queries.FetchAnnotationFromEncyclopediaId;
 
 public sealed record FetchAnnotationFromEncyclopediaIdQuery(int EncyclopediaId): IQuery<AnnotationList>;
