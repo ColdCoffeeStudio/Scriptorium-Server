@@ -1,5 +1,5 @@
 ﻿using Application;
-using Application.Services.ContentTable;
+using Application.Services.ContentTableSearch;
 using Application.Services.EncyclopediaSearch;
 using Infrastructure;
 using Microsoft.AspNetCore.Builder;
@@ -37,6 +37,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IEncyclopediaSearchService, EncyclopediaSearchService>();
+builder.Services.AddScoped<IContentTableService, ContentTableService>();
 
 builder.Services
     .AddApplication(builder.Configuration)
