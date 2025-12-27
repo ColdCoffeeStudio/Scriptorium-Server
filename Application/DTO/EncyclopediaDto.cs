@@ -1,7 +1,8 @@
 ﻿namespace Application.DTO;
 
 public record EncyclopediaDto(
-    Guid Id,
+    int Id,
     string Title,
-    Guid ScribeId
+    Guid ScribeId,
+    string ScribeName
 ): IDto;

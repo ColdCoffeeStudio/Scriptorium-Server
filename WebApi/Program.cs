@@ -1,4 +1,7 @@
 ﻿using Application;
+using Application.Services.AnnotationInformation;
+using Application.Services.ContentTableSearch;
+using Application.Services.EncyclopediaSearch;
 using Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +13,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) =>
 {
     configuration
-        .Enrich.WithProperty("ApplicationName", "Exemple")
+        .Enrich.WithProperty("ApplicationName", "Scriptorium")
         .WriteTo.Console()
         .WriteTo.DurableHttpUsingFileSizeRolledBuffers(
             requestUri: "http://localhost://",
@@ -32,8 +35,11 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IEncyclopediaSearchService, EncyclopediaSearchService>();
+builder.Services.AddScoped<IContentTableService, ContentTableService>();
+builder.Services.AddScoped<IAnnotationInformationService, AnnotationInformationService>();
 
 builder.Services
     .AddApplication(builder.Configuration)
