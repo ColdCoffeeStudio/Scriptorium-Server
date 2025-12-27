@@ -14,6 +14,11 @@ public class EncyclopediaRepositoryErrors
         return new Error("EncyclopediaRepository.InvalidData", $"Something went wrong with the fetched data for the encyclopediaId '{encyclopediaId}': {error.Message}");
     }
 
+    public static Error EncyclopediaNotFound(int encyclopediaId)
+    {
+        return new Error("EncyclopediaRepository.NoEncyclopediaFound", $"No encyclopedia was found for the EncyclopediaId '{encyclopediaId}'.");
+    }
+
     public static Error NoScribeFound(Guid scribeId)
     {
         return new Error("EncyclopediaRepository.NoScribeFound", $"No scribe was found for the ScribeId '{scribeId}'.");
