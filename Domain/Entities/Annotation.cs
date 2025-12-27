@@ -5,22 +5,27 @@ namespace Domain.Entities;
 
 public class Annotation: IEntity<Annotation>
 {
-    private Guid Id { get; }
-    private string Title { get; }
-    private int StartPage { get; }
-    private int EndPage { get; }
-    private string ContentUrl { get; }
-    private DateOnly Date { get; }
-    private Theme Theme { get; }
-    private Encyclopedia Encyclopedia { get; }
+    public int Id { get; }
+    public string Title { get; }
+    public int StartPage { get; }
+    public int EndPage { get; }
+    public string ContentUrl { get; }
+    public string Tags { get; }
+    public DateOnly Date { get; }
+    public Theme Theme { get; }
+    public Encyclopedia Encyclopedia { get; }
 
-    public static Result<Annotation> Create(string title, int startPage, int endPage, string contentUrl, DateOnly date, 
+    public static Result<Annotation> Create(int id, string title, int startPage, int endPage, string contentUrl, string tags, DateOnly date, 
         Theme theme, Encyclopedia encyclopedia)
     {
         AnnotationErrors errors = new AnnotationErrors();
         Result<Annotation> result;
 
-        if (String.IsNullOrEmpty(title))
+        if (id <= 0)
+        {
+            result = new Result<Annotation>(Annotation.Empty(), errors.MissingId(), false);
+        }
+        else if (String.IsNullOrEmpty(title))
         {
             result = new Result<Annotation>(Annotation.Empty(), errors.MissingTitle(), false);
         }
@@ -50,13 +55,12 @@ public class Annotation: IEntity<Annotation>
         }
         else
         {
-            if (String.IsNullOrEmpty(contentUrl))
-            {
-                contentUrl = Constants.NotImplementedContentUrl;
-            }
+            contentUrl = String.IsNullOrEmpty(contentUrl)
+                ? Constants.NotImplementedContentUrl
+                : contentUrl;
             
             result = new Result<Annotation>(
-                new Annotation(Guid.NewGuid(), title, startPage, endPage, contentUrl, date, theme, encyclopedia),
+                new Annotation(id, title, startPage, endPage, contentUrl, tags, date, theme, encyclopedia),
                 Error.Empty(), true);
         }
         
@@ -65,10 +69,10 @@ public class Annotation: IEntity<Annotation>
         
     public static Annotation Empty()
     {
-        return new Annotation(Guid.Empty, "", -1,-1, "", DateOnly.MinValue, Theme.Empty(), Encyclopedia.Empty());
+        return new Annotation(-1, "", -1,-1, "", "", DateOnly.MinValue, Theme.Empty(), Encyclopedia.Empty());
     }
 
-    private Annotation(Guid id, string title, int startPage, int endPage, string contentUrl, DateOnly date, Theme theme,
+    private Annotation(int id, string title, int startPage, int endPage, string contentUrl, string tags, DateOnly date, Theme theme,
         Encyclopedia encyclopedia)
     {
         Id = id;
@@ -76,6 +80,7 @@ public class Annotation: IEntity<Annotation>
         StartPage = startPage;
         EndPage = endPage;
         ContentUrl = contentUrl;
+        Tags = tags;
         Date = date;
         Theme = theme;
         Encyclopedia = encyclopedia;

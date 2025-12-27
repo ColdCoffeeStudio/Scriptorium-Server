@@ -4,6 +4,11 @@ namespace Domain.Errors;
 
 public class AnnotationErrors
 {
+    public Error MissingId()
+    {
+        return new Error("Annotation.MissingId", "Annotation id must be greater than 0.");
+    }
+    
     public Error MissingTitle()
     {
         return new Error("Annotation.MissingTitle", "Annotation title is missing.");
