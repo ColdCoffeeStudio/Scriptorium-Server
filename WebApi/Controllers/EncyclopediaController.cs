@@ -1,6 +1,8 @@
 ﻿using Application.DTO;
 using Application.Services.ContentTableSearch;
 using Application.Services.EncyclopediaSearch;
+using Domain.Errors;
+using Domain.Shared;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Abstraction;
@@ -28,8 +30,24 @@ public class EncyclopediaController(
     public async Task<IActionResult> GetContentTable(int encyclopediaId, CancellationToken cancellationToken)
     {
         AnswerListDto result = await contentTableService.HandleContentTableAsync(encyclopediaId, cancellationToken);
-        return result.Success
-            ? Ok(result.Value)
-            : BadRequest(result.error);
+        IActionResult response;
+
+        Error notFoundError = new AnnotationRepositoryErrors()
+            .EncyclopediaNotFound(encyclopediaId);
+
+        if (result.Success)
+        {
+            response = Ok(result.Value);
+        }
+        else if (result.error.Equals(notFoundError))
+        {
+            response = NotFound();
+        }
+        else
+        {
+            response = BadRequest(result.error);
+        }
+        
+        return response;
     }
 }

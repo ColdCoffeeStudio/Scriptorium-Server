@@ -11,76 +11,51 @@ namespace Application.Services.ContentTableSearch;
 
 public class ContentTableService (ISender sender, ILogger<ContentTableService> logger): IContentTableService
 {
+    private readonly ContentTableServiceErrors _errors = new();
+    private readonly ContentTableToDtoMapper _mapper = new();
+
     public async Task<AnswerListDto> HandleContentTableAsync(int encyclopediaId, CancellationToken cancellationToken)
     {
-        AnswerListDto result;
-        ContentTableServiceErrors errors = new ContentTableServiceErrors();
-        ContentTableToDtoMapper mapper = new ContentTableToDtoMapper();
         Result<AnnotationList> annotationsList = await sender.Send(new FetchAnnotationFromEncyclopediaIdQuery(encyclopediaId), cancellationToken);
 
-        if (annotationsList.Succeeded)
+        return annotationsList.Succeeded 
+            ? BuildContentTable(annotationsList.Value) 
+            : new AnswerListDto(false, new List<IDto>(), annotationsList.Error);
+    }
+
+    private AnswerListDto BuildContentTable(AnnotationList annotationsList)
+    {
+        List<ContentTableEntry> contentTableEntries = [];
+        List<Annotation> annotations = annotationsList.Annotations;
+        List<Theme> themes = annotations
+            .Select(a => a.Theme)
+            .Distinct()
+            .ToList();
+
+        foreach (Annotation annotation in annotations)
         {
-            List<ContentTableEntry> contentTableEntries = new List<ContentTableEntry>();
-            List<Annotation> annotations = annotationsList.Value.Annotations;
-            List<Theme> themes = annotations
-                .Select(a => a.Theme)
-                .Distinct()
+            Theme theme = annotation.Theme;
+            
+            List<Annotation> tmpNotes = annotations
+                .Where(a => a.Theme.Id == theme.Id)
                 .ToList();
 
-            int themeIndex = 0;
-            bool errorOccured = false;
-            Error loopError = Error.Empty();
+            Result<ContentTableEntry> tmpContentTableEntry =
+                ContentTableEntry.Create(theme.Id, theme.Name, tmpNotes);
 
-            while (themeIndex < themes.Count && !errorOccured)
+            if (tmpContentTableEntry.Failed)
             {
-                Theme theme = themes.ElementAt(themeIndex);
-                List<Annotation> tmpNotes = annotations
-                    .Where(a => a.Theme.Id == theme.Id)
-                    .ToList();
-
-                Result<ContentTableEntry> tmpContentTableEntry =
-                    ContentTableEntry.Create(theme.Id, theme.Name, tmpNotes);
-
-                if (tmpContentTableEntry.Failed)
-                {
-                    errorOccured = true;
-                    loopError = errors.ContentTableEntryCreationError(tmpContentTableEntry.Error);
-                }
-                else
-                {
-                    contentTableEntries.Add(tmpContentTableEntry.Value);
-                    themeIndex++;
-                }
+                return new AnswerListDto(false, new List<IDto>(), _errors.ContentTableEntryCreationError(tmpContentTableEntry.Error));
             }
-
-            if (!errorOccured)
-            {
-                if(contentTableEntries.Count == 0)
-                {
-                    result = new AnswerListDto(true, new List<IDto>(), Error.Empty());
-                }
-                else
-                {
-                    Result<ContentTable> tmpContentTable = ContentTable.Create(contentTableEntries);
-                    
-                    result = tmpContentTable.Succeeded
-                        ? new AnswerListDto(true, mapper.Map(tmpContentTable.Value), Error.Empty())
-                        : new AnswerListDto(false, new List<IDto>(), errors.ContentTableCreationError(tmpContentTable.Error));
-                }
-            }
-            else
-            {
-                result = new AnswerListDto(
-                    false,
-                    new List<IDto>(),
-                    loopError);
-            }
-
+            
+            contentTableEntries.Add(tmpContentTableEntry.Value);
         }
-        else
-        {
-            result = new AnswerListDto(false, new List<IDto>(), errors.AnnotationListFetchingError(encyclopediaId, annotationsList.Error));
-        }
+
+        Result<ContentTable> tmpContentTable = ContentTable.Create(contentTableEntries);
+                
+        AnswerListDto result = tmpContentTable.Succeeded
+            ? new AnswerListDto(true, _mapper.Map(tmpContentTable.Value), Error.Empty())
+            : new AnswerListDto(false, new List<IDto>(), _errors.ContentTableCreationError(tmpContentTable.Error));
 
         return result;
     }

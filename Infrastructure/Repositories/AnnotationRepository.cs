@@ -14,7 +14,7 @@ namespace Infrastructure.Repositories;
 
 internal sealed class AnnotationRepository(ScriptoriumDbContext context, ILogger<EncyclopediaRepository> logger) : IAnnotationRepository
 {
-    readonly AnnotationRepositoryErrors errors = new AnnotationRepositoryErrors();
+    private readonly AnnotationRepositoryErrors _errors = new();
     public async Task<Result<AnnotationList>> FetchAnnotationFromEncyclopedia(int encyclopediaId, CancellationToken cancellationToken)
     {
         bool canConnect = await context.Database.CanConnectAsync(cancellationToken);
@@ -35,7 +35,7 @@ internal sealed class AnnotationRepository(ScriptoriumDbContext context, ILogger
                 select t
             ).ToListAsync(cancellationToken: cancellationToken);
 
-            Result<Encyclopedia> encyclopedia = MatchingEncyclopedia(encyclopediaId);
+            Result<Encyclopedia> encyclopedia = await MatchingEncyclopedia(encyclopediaId);
 
             if (encyclopedia.Succeeded)
             {
@@ -43,7 +43,7 @@ internal sealed class AnnotationRepository(ScriptoriumDbContext context, ILogger
                     
                 foreach (Annotation annotation in queryAnnotations)
                 {
-                    Result<Domain.Entities.Annotation> tmpAnnotation = Map(annotation, queryThemes, encyclopedia.Value);
+                    Result<Domain.Entities.Annotation> tmpAnnotation = await Map(annotation, queryThemes, encyclopedia.Value);
                     
                     if (tmpAnnotation.Succeeded)
                     {
@@ -52,7 +52,7 @@ internal sealed class AnnotationRepository(ScriptoriumDbContext context, ILogger
                     else
                     {
                         return new Result<AnnotationList>(AnnotationList.Empty(), 
-                            errors.AnnotationCreationError(annotation.id,tmpAnnotation.Error),false);
+                            _errors.AnnotationCreationError(annotation.id,tmpAnnotation.Error),false);
                     }
                 }
             
@@ -60,18 +60,18 @@ internal sealed class AnnotationRepository(ScriptoriumDbContext context, ILogger
 
                 result = annotationList.Succeeded
                     ? annotationList
-                    : new Result<AnnotationList>(AnnotationList.Empty(), errors.AnnotationListCreationError(annotationList.Error), false);
+                    : new Result<AnnotationList>(AnnotationList.Empty(), _errors.AnnotationListCreationError(annotationList.Error), false);
 
             }
             else
             {
                 result = new Result<AnnotationList>(AnnotationList.Empty(),
-                    errors.EncyclopediaCreationError(encyclopediaId, encyclopedia.Error), false);
+                    encyclopedia.Error, false);
             }
         }
         else
         {
-            result = new Result<AnnotationList>(AnnotationList.Empty(), errors.DatabaseConnectionError(), false);
+            result = new Result<AnnotationList>(AnnotationList.Empty(), _errors.DatabaseConnectionError(), false);
         }
 
         return result;
@@ -85,7 +85,7 @@ internal sealed class AnnotationRepository(ScriptoriumDbContext context, ILogger
         {
             return new Result<Domain.Entities.Annotation>(
                 Domain.Entities.Annotation.Empty(), 
-                errors.AnnotationNotFound(id), 
+                _errors.AnnotationNotFound(id), 
                 false);
         }
         
@@ -97,15 +97,15 @@ internal sealed class AnnotationRepository(ScriptoriumDbContext context, ILogger
             select t
         ).ToListAsync(cancellationToken: cancellationToken);
         
-        Result<Domain.Entities.Theme> theme = MatchingTheme(queryThemes, annotation.themeId);
+        Result<Domain.Entities.Theme> theme = await MatchingTheme(annotation.themeId);
 
         if (theme.Failed)
         {
-            result = new Result<Domain.Entities.Annotation>(Domain.Entities.Annotation.Empty(), errors.ThemeCreationError(annotation.id, annotation.themeId, theme.Error), false);
+            result = new Result<Domain.Entities.Annotation>(Domain.Entities.Annotation.Empty(), _errors.ThemeCreationError(annotation.id, annotation.themeId, theme.Error), false);
         }
         else
         {
-            Result<Encyclopedia> encyclopedia = MatchingEncyclopedia(annotation.encyclopediaId);
+            Result<Encyclopedia> encyclopedia = await MatchingEncyclopedia(annotation.encyclopediaId);
             
             result = encyclopedia.Succeeded
                 ? Domain.Entities.Annotation.Create(
@@ -119,65 +119,59 @@ internal sealed class AnnotationRepository(ScriptoriumDbContext context, ILogger
                     theme.Value,
                     encyclopedia.Value
                 )
-                : new Result<Domain.Entities.Annotation>(Domain.Entities.Annotation.Empty(), errors.EncyclopediaCreationError(annotation.encyclopediaId, theme.Error), false);
+                : new Result<Domain.Entities.Annotation>(Domain.Entities.Annotation.Empty(), _errors.EncyclopediaCreationError(annotation.encyclopediaId, theme.Error), false);
         }
 
         return result;
     }
     
-    private Result<Domain.Entities.Theme> MatchingTheme(List<Theme> queryThemes, int annotationThemeId)
+    private async Task<Result<Domain.Entities.Theme>> MatchingTheme(int annotationThemeId)
     {
-        Theme queryTheme = queryThemes.FirstOrDefault(t => t.id == annotationThemeId) ?? new Theme();
-        
-        return queryTheme.Equals(new Theme())
-            ? Domain.Entities.Theme.Create(queryTheme.id, queryTheme.name, queryTheme.folder)
-            : new Result<Domain.Entities.Theme>(Domain.Entities.Theme.Empty(), errors.ThemeNotFound(annotationThemeId), false);       
+        Theme? queryTheme = await context.Themes.FindAsync(annotationThemeId);
+
+        return queryTheme is not { } theme 
+            ? new Result<Domain.Entities.Theme>(
+                Domain.Entities.Theme.Empty(),
+                _errors.ThemeNotFound(annotationThemeId),
+                false) 
+            : Domain.Entities.Theme.Create(theme.id, theme.name, theme.folder);
     }
 
-    private Result<Encyclopedia> MatchingEncyclopedia(int annotationEncyclopediaId)
+    private async Task<Result<Encyclopedia>> MatchingEncyclopedia(int annotationEncyclopediaId)
     {
         Result<Encyclopedia> result;
-        Encyclopedium queryEncyclopedia = (
-            from e in context.Encyclopedia
-            where e.id == annotationEncyclopediaId
-            orderby e.id
-            select e
-        ).FirstOrDefault() ?? new Encyclopedium();
-
-        if (queryEncyclopedia.Equals(new Encyclopedium()))
+        Encyclopedium? queryEncyclopedia = await context.Encyclopedia.FindAsync(annotationEncyclopediaId);
+    
+        if (queryEncyclopedia is not { } encyclopedia)
         {
-            result = new Result<Encyclopedia>(Encyclopedia.Empty(),
-                errors.EncyclopediaNotFound(annotationEncyclopediaId), false);
+            return new Result<Encyclopedia>(Encyclopedia.Empty(),
+                _errors.EncyclopediaNotFound(annotationEncyclopediaId), false);
         }
-        else
-        {
-            Result<Domain.Entities.Scribe> scribe = MatchingScribe(queryEncyclopedia.scribeId);
-
-            result = scribe.Succeeded
-                ? Encyclopedia.Create(queryEncyclopedia.id, queryEncyclopedia.title, scribe.Value)
-                : new Result<Encyclopedia>(Encyclopedia.Empty(), errors.ScribeCreationError(queryEncyclopedia.scribeId, scribe.Error),
-                    false);
-        }
-
-        return result;
-    }
-
-    private Result<Domain.Entities.Scribe> MatchingScribe(string scribeId)
-    {
-        Scribe queryScribe = (
-            from s in context.Scribes
-            where s.id == scribeId
-            orderby s.id
-            select s).FirstOrDefault() ?? new Scribe();
         
-        return queryScribe.Equals(new Scribe()) 
-            ? Domain.Entities.Scribe.Create(new Guid(queryScribe.id), queryScribe.username)
-            : new Result<Domain.Entities.Scribe>(Domain.Entities.Scribe.Empty(), errors.ScribeNotFound(scribeId), false);
+        Result<Domain.Entities.Scribe> scribe = await MatchingScribe(queryEncyclopedia.scribeId);
+
+        return scribe.Succeeded
+            ? Encyclopedia.Create(queryEncyclopedia.id, queryEncyclopedia.title, scribe.Value)
+            : new Result<Encyclopedia>(Encyclopedia.Empty(), scribe.Error,
+                false);
+        
     }
 
-    private Result<Domain.Entities.Annotation> Map(Annotation queryAnnotation, List<Theme> queryThemes, Encyclopedia encyclopedia)
+    private async Task<Result<Domain.Entities.Scribe>> MatchingScribe(string scribeId)
     {
-        Result<Domain.Entities.Theme> theme = MatchingTheme(queryThemes, queryAnnotation.themeId);
+        Scribe? queryScribe = await context.Scribes.FindAsync(scribeId);
+
+        return queryScribe is not { } scribe
+            ? new Result<Domain.Entities.Scribe>(
+                Domain.Entities.Scribe.Empty(),
+                _errors.ScribeNotFound(scribeId),
+                false)
+            : Domain.Entities.Scribe.Create(new Guid(scribe.id), scribe.username);
+    }
+
+    private async Task<Result<Domain.Entities.Annotation>> Map(Annotation queryAnnotation, List<Theme> queryThemes, Encyclopedia encyclopedia)
+    {
+        Result<Domain.Entities.Theme> theme = await MatchingTheme(queryAnnotation.themeId);
 
         return theme.Succeeded
             ? Domain.Entities.Annotation.Create(
@@ -192,6 +186,6 @@ internal sealed class AnnotationRepository(ScriptoriumDbContext context, ILogger
                 encyclopedia
             )
             : new Result<Domain.Entities.Annotation>(Domain.Entities.Annotation.Empty(),
-                errors.ThemeCreationError(queryAnnotation.id, queryAnnotation.themeId, theme.Error), false);
+                _errors.ThemeCreationError(queryAnnotation.id, queryAnnotation.themeId, theme.Error), false);
     }
 }
