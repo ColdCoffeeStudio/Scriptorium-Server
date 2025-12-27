@@ -33,4 +33,29 @@ public class AnnotationRepositoryErrors
     {
         return new Error("AnnotationRepositoryErrors.ScribeCreationError", $"Something went wrong while initiating the scribe '{scribeId}': {error.Message}");
     }
+    
+    public Error AnnotationNotFound(int id)
+    {
+        return new Error("AnnotationRepositoryErrors.AnnotationNotFound",
+            $"No annotation found in the database for the id '{id}'.");
+    }
+
+    public Error EncyclopediaNotFound(int encyclopediaId)
+    {
+        return new Error("AnnotationRepositoryErrors.EncyclopediaNotFound",
+            $"No encyclopedia found in the database for the id '{encyclopediaId}'.");
+    }
+
+    public Error ThemeNotFound(int themeId)
+    {
+        return new Error("AnnotationRepositoryErrors.ThemeNotFound",
+            $"No theme found in the database for the id '{themeId}'.");
+    }
+
+    public Error ScribeNotFound(string scribeId)
+    {
+        return new Error("AnnotationRepositoryErrors.ScribeNotFound",
+            $"No scribe found in the database for the id '{scribeId}'.");
+    }
+
 }
